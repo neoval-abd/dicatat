@@ -11,6 +11,8 @@
 
 ## 2. Hubungkan Cloudflare Pages
 
+Jika proyek yang sudah dibuat adalah **Workers** (alamat dashboard mengandung `/workers/services/`), proyek itu juga dapat digunakan. Gunakan build command `npm run build` dan deploy command `npx wrangler deploy`. Repository menyediakan `wrangler.jsonc` untuk Static Assets dengan fallback SPA. Isi environment variables di pengaturan **build**, bukan hanya runtime. URL produksi Workers biasanya berakhiran `workers.dev`; gunakan URL sebenarnya itu pada pengaturan Supabase. Langkah Pages di bawah berlaku bila memilih membuat proyek Pages.
+
 1. Masuk ke https://dash.cloudflare.com.
 2. Buka **Workers & Pages → Create application → Pages → Connect to Git**. Nama menu bisa sedikit berbeda; pilih alur Pages yang mengimpor repository Git.
 3. Hubungkan GitHub. Beri akses hanya ke repository `dicatat`.

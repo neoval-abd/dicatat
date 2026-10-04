@@ -90,7 +90,9 @@ Output production: `dist/`. Uji install pada build production. Checklist dan car
 
 ## 13. Deployment
 
-**Cloudflare Pages:** import repository, framework Vite, build `npm run build`, output `dist`, Node 22+. Tambahkan kedua environment variable di pengaturan build lalu deploy. Alternatif upload folder `dist` melalui Direct Upload setelah build lokal. `_redirects` menangani SPA dan `_headers` memberi header dasar.
+**Cloudflare Pages:** import repository, framework Vite, build `npm run build`, output `dist`, Node 22+. Tambahkan kedua environment variable di pengaturan build lalu deploy. Alternatif upload folder `dist` melalui Direct Upload setelah build lokal. Pages menangani SPA otomatis karena tidak ada `404.html`; `_headers` memberi header dasar.
+
+**Cloudflare Workers (Static Assets):** untuk proyek Workers seperti `dicatat`, gunakan build `npm run build` dan deploy `npx wrangler deploy`. `wrangler.jsonc` menunjuk folder `dist` dan mengaktifkan fallback SPA. Jangan tambahkan aturan `/* /index.html 200` pada `_redirects`, karena Workers menolaknya sebagai loop. Isi kedua variable `VITE_SUPABASE_*` pada pengaturan build Workers, lalu deploy ulang setiap kali nilainya berubah.
 
 **Vercel:** import repository, preset Vite, set kedua environment variable, deploy. `vercel.json` sudah disediakan. Perubahan environment membutuhkan build ulang. Tambahkan domain hosting ke Supabase URL Configuration. Jangan upload `.env.local` ke repository.
 
