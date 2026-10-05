@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Sun, Moon, Monitor, Plus, Pencil, Trash2, LogOut, ShieldCheck, BookCheck, LoaderCircle, RefreshCw } from 'lucide-react'
+import { Sun, Moon, Heart, Plus, Pencil, Trash2, LogOut, ShieldCheck, BookCheck, LoaderCircle, RefreshCw } from 'lucide-react'
 import type { Category } from '../types'
 import { db } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -46,7 +46,7 @@ export default function Settings({ categories, onChanged, install }: { categorie
     try { const { error } = await db().auth.signOut({ scope: 'local' }); if (error) throw error }
     catch (error) { toast(errorMessage(error), 'error'); setBusy(false) }
   }
-  const themes: { value: Theme; label: string; Icon: typeof Sun }[] = [{ value: 'light', label: 'Terang', Icon: Sun }, { value: 'dark', label: 'Gelap', Icon: Moon }, { value: 'system', label: 'Sistem', Icon: Monitor }]
+  const themes: { value: Theme; label: string; Icon: typeof Sun }[] = [{ value: 'light', label: 'Terang', Icon: Sun }, { value: 'dark', label: 'Gelap', Icon: Moon }, { value: 'pink', label: 'Pink', Icon: Heart }]
   return <div className="page-stack"><div className="page-heading"><p className="eyebrow">SESUAIKAN RUANG ANDA</p><h1>Pengaturan</h1><p className="muted">Sedikit personal, lebih nyaman digunakan.</p></div>
     <section className="card"><div className="profile-heading"><span className="avatar">{(name || session!.user.email || 'A').charAt(0).toUpperCase()}</span><div><h2>Akun pribadi</h2><p className="muted break-all text-sm">{session!.user.email}</p></div></div>
       {profile.loading ? <Loading /> : profile.error ? <ErrorState message={profile.error} retry={profile.retry} /> : <form className="profile-form" onSubmit={updateName}><div className="field"><label htmlFor="profile-name">Nama panggilan</label><input id="profile-name" maxLength={100} value={name} disabled={savingName} placeholder="Nama Anda" onChange={e => setName(e.target.value)} /></div><button className="button secondary" disabled={savingName}>{savingName ? 'Menyimpan…' : 'Simpan'}</button></form>}
