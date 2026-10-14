@@ -83,13 +83,32 @@ try {
   const matches = await result(clientA.from('transactions').select('*').eq('category_id', catA.id).gte('transaction_date', date).lte('transaction_date', date).ilike('note', `%${token}%`).range(0, 19))
   assert.equal(matches.length, 1); assert.equal(Number(matches[0].amount), 50000)
   // Use an unused distant month so an existing personal budget is never overwritten.
-  const budgetA = await create(clientA, 'monthly_budgets', { user_id: userA.id, month: 8, year: 2098, amount: 100000 })
-  const budgetB = await create(clientB, 'monthly_budgets', { user_id: userB.id, month: 8, year: 2098, amount: 100000 })
+  const budgetA = await create(clientA, 'monthly_budgets', { user_id: userA.id, month: 8, year: 2098, amount: 100000, target_income: 500000 })
+  const budgetB = await create(clientB, 'monthly_budgets', { user_id: userB.id, month: 8, year: 2098, amount: 100000, target_income: 500000 })
   await checkIsolation('monthly_budgets', budgetA, budgetB, { month: 9, year: 2098, amount: 100000 }, { amount: 1 })
   await result(clientA.from('monthly_budgets').update({ amount: 120000 }).eq('id', budgetA.id).select().single())
+
+  // Check budget_allocations isolation
+  const allocA = await create(clientA, 'budget_allocations', { user_id: userA.id, monthly_budget_id: budgetA.id, category_id: catA.id, amount: 50000 })
+  const allocB = await create(clientB, 'budget_allocations', { user_id: userB.id, monthly_budget_id: budgetB.id, category_id: catB.id, amount: 50000 })
+  await checkIsolation('budget_allocations', allocA, allocB, { monthly_budget_id: budgetB.id, category_id: catB.id, amount: 20000 }, { amount: 60000 })
+
+  // Check savings_goals isolation
+  const goalA = await create(clientA, 'savings_goals', { user_id: userA.id, name: `Goal A ${token}`, target_amount: 1000000, goal_type: 'emergency_fund' })
+  const goalB = await create(clientB, 'savings_goals', { user_id: userB.id, name: `Goal B ${token}`, target_amount: 1000000, goal_type: 'general_savings' })
+  await checkIsolation('savings_goals', goalA, goalB, { name: `Forbidden Goal ${token}`, target_amount: 500000 }, { target_amount: 1200000 })
+
+  // Check savings_movements isolation
+  const movA = await create(clientA, 'savings_movements', { user_id: userA.id, goal_id: goalA.id, movement_type: 'deposit', amount: 100000, movement_date: date })
+  const movB = await create(clientB, 'savings_movements', { user_id: userB.id, goal_id: goalB.id, movement_type: 'deposit', amount: 100000, movement_date: date })
+  await checkIsolation('savings_movements', movA, movB, { goal_id: goalB.id, movement_type: 'deposit', amount: 50000, movement_date: date }, { amount: 150000 })
+  await rejected(clientA.from('savings_movements').insert({ user_id: userA.id, goal_id: goalB.id, movement_type: 'deposit', amount: 10000, movement_date: date }), 'Pergerakan tabungan lintas akun')
+
   await invisible(anonymous.from('transactions').select('*'), 'Anonymous SELECT')
+  await invisible(anonymous.from('savings_goals').select('*'), 'Anonymous Goals SELECT')
   await rejected(anonymous.rpc('expense_summary', { p_start: '2098-08-01', p_end: '2098-08-31', p_today: date }), 'Anonymous summary')
-  console.log('CRUD, filter, agregasi, budget, isolasi empat tabel dan Storage: lulus')
+  await rejected(anonymous.rpc('finance_summary', { p_start: '2098-08-01', p_end: '2098-08-31', p_today: date }), 'Anonymous finance summary')
+  console.log('CRUD, filter, agregasi, budget, tabungan, alokasi, isolasi seluruh tabel dan Storage: lulus')
 } catch (error) {
   console.error(error.message)
   process.exitCode = 1
